@@ -14,6 +14,11 @@ namespace CefSharp.AppDomain.Lib
             if (!Cef.IsInitialized)
             {
                 var settings = new CefSettings();
+                var assemblyPath = Path.GetDirectoryName(new Uri(GetType().Assembly.CodeBase).LocalPath);
+
+                settings.BrowserSubprocessPath = Path.Combine(assemblyPath, "CefSharp.BrowserSubprocess.exe");
+                settings.ResourcesDirPath = assemblyPath;
+                settings.LocalesDirPath = Path.Combine(assemblyPath, "locales");
 
                 var osVersion = Environment.OSVersion;
                 //Disable GPU for Windows 7
@@ -44,6 +49,20 @@ namespace CefSharp.AppDomain.Lib
 
             //Google has been loaded
             //Yay!
+            
+            var t1 = _browser.EvaluateScriptAsync("(function() { return document.title })();");
+
+            var complete = t1.ContinueWith(t =>
+            {
+                if (!t.IsFaulted)
+                {
+                    var response = t.Result;
+                }
+
+                _renderingFinishedSemaphore.Release();
+
+            }, TaskScheduler.Default);
+            
             _renderingFinishedSemaphore.Release();
         }
 
