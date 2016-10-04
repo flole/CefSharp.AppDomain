@@ -1,6 +1,9 @@
-﻿using System;
+using System;
+using System.IO;
 using System.Reflection;
 using System.Threading;
+using System.Threading.Tasks;
+using CefSharp.Internals;
 using CefSharp.OffScreen;
 
 namespace CefSharp.AppDomain.Lib
@@ -8,8 +11,8 @@ namespace CefSharp.AppDomain.Lib
     public class CefSharpRenderer : MarshalByRefObject, ICefSharpRenderer
     {
         private ChromiumWebBrowser _browser;
-        private SemaphoreSlim _renderingFinishedSemaphore = new SemaphoreSlim(0, 1);
-        public void RenderSomething()
+        private TaskCompletionSource<JavascriptResponse> _taskCompletionSource;
+        public string RenderSomething()
         {
             if (!Cef.IsInitialized)
             {
@@ -37,7 +40,9 @@ namespace CefSharp.AppDomain.Lib
             _browser.BrowserInitialized += _browser_BrowserInitialized;
             _browser.LoadingStateChanged += _browser_LoadingStateChanged;
 
-            _renderingFinishedSemaphore.Wait();
+            _taskCompletionSource = new TaskCompletionSource<JavascriptResponse>();
+            _taskCompletionSource.Task.Wait();
+            return _taskCompletionSource.Task.Result.Result as string;
         }
 
         private void _browser_LoadingStateChanged(object sender, LoadingStateChangedEventArgs e)
@@ -49,7 +54,7 @@ namespace CefSharp.AppDomain.Lib
 
             //Google has been loaded
             //Yay!
-            
+
             var t1 = _browser.EvaluateScriptAsync("(function() { return document.title })();");
 
             var complete = t1.ContinueWith(t =>
@@ -57,13 +62,12 @@ namespace CefSharp.AppDomain.Lib
                 if (!t.IsFaulted)
                 {
                     var response = t.Result;
+
                 }
 
-                _renderingFinishedSemaphore.Release();
+                _taskCompletionSource.TrySetFromTask(t);
 
             }, TaskScheduler.Default);
-            
-            _renderingFinishedSemaphore.Release();
         }
 
         private void _browser_BrowserInitialized(object sender, EventArgs e)

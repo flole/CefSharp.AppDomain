@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
@@ -11,7 +11,7 @@ namespace CefSharp.AppDomain.Lib
 {
     public class CefSharpRendererProxy : ICefSharpRenderer
     {
-        public void RenderSomething()
+        public string RenderSomething()
         {
             //Get the default appdomain. This will also work if the default appdomain comes from a service like the IIS
             var defaultAppDomain = GetAppDomains().Single(domain => domain.IsDefaultAppDomain());
@@ -20,7 +20,7 @@ namespace CefSharp.AppDomain.Lib
 
             //Create a new instance of the CefSharpRenderer in the context of the default appdomain
             var instance = (ICefSharpRenderer)defaultAppDomain.CreateInstanceFromAndUnwrap(pathToAssembly, typeof(CefSharpRenderer).FullName);
-            instance.RenderSomething();
+            return instance.RenderSomething();
         }
 
         private static List<System.AppDomain> GetAppDomains()

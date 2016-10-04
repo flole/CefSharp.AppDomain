@@ -1,6 +1,7 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Threading.Tasks;
 using System.Web;
 using System.Web.Mvc;
 using CefSharp.AppDomain.Lib;
@@ -16,7 +17,7 @@ namespace WebApplication.Controllers
             ICefSharpRenderer renderer = new CefSharpRendererProxy();
             //Try to render something in default appdomain
             Console.WriteLine("Render something in default AppDomain: ");
-            renderer.RenderSomething();
+            var res = renderer.RenderSomething();
             Console.WriteLine("Works!");
 
             return View();
